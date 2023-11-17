@@ -20,20 +20,21 @@ export type Plate = {
   last_updated?: string;
   title: string;
   description: string;
-  author: string; // raw input assuming we are not using auth
-  items: Item[];
-  socialLinks: {
-    twitter?: string; // optional
-    youtube?: string; // optional
-    mastodon?: string; // optional
-    bsky?: string; // optional
-    instagram?: string; // optional
-    tiktok?: string; // optional
-    discord?: string; // optional
-    reddit?: string; // optional
-    linkedin?: string; // optional
-    website?: string; // optional
-    threads?: string; // optional
+  author: {
+    name: string;
+    socialLinks: {
+      twitter?: string;
+      youtube?: string;
+      mastodon?: string;
+      bsky?: string;
+      instagram?: string;
+      tiktok?: string;
+      discord?: string;
+      reddit?: string;
+      linkedin?: string;
+      website?: string;
+      threads?: string;
+    };
   };
 };
 
