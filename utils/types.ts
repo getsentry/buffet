@@ -12,38 +12,39 @@ export enum ItemType {
   PLATE = "plate", // can only be added to a tray
 }
 
+export type AuthorProfile = {
+  name: string;
+  twitter?: string;
+  youtube?: string;
+  mastodon?: string;
+  bsky?: string;
+  instagram?: string;
+  tiktok?: string;
+  discord?: string;
+  reddit?: string;
+  linkedin?: string;
+  website?: string;
+  threads?: string;
+};
+
 export type Plate = {
   id: string;
   user_id: string | null; // null in v1
-  plate_ids?: string[]; // remixed plates
   date_created?: string;
   last_updated?: string;
+  plate_ids?: string[]; // remixed plates
+  fingerprint: string; // hash or custom string (future)
   title: string;
   description: string;
-  author: {
-    name: string;
-    socialLinks: {
-      twitter?: string;
-      youtube?: string;
-      mastodon?: string;
-      bsky?: string;
-      instagram?: string;
-      tiktok?: string;
-      discord?: string;
-      reddit?: string;
-      linkedin?: string;
-      website?: string;
-      threads?: string;
-    };
-  };
+  author?: AuthorProfile;
 };
 
 export type Item = {
-  id: string;
+  id: number;
   user_id: string | null; // null in v1
-  plate_ids: string[]; // at least one
   date_created: string;
   last_updated: string;
+  plate: Plate;
   url: string;
   type: ItemType; // default ItemType.URL
   metaData: {
