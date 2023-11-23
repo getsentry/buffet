@@ -55,5 +55,5 @@ export type Item = {
     favicon: string | null;
     openGraphImageUrl: string | null;
   };
-  description: string | null; // limit to 140 chars
+  description: string; // limit to 140 chars
 };

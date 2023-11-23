@@ -4,6 +4,9 @@ import { Field, Form, ErrorMessage, defineRule } from "vee-validate";
 import { useStorage } from "@vueuse/core";
 import { type Plate, ItemType } from "../utils/types";
 
+// TODO - investigate console errors on blur of input fields,
+// probably caused by these rules
+// inputTypes.contains is not a function
 defineRule("required", (value: any, [message]: string) => {
   if (!value || value.length === 0) {
     return message;
@@ -21,7 +24,7 @@ defineRule("url", (value: any, [message]: string) => {
 });
 
 defineRule("oneForty", (value: any, [message]: string) => {
-  if (value && value.length > 0 && value.length <= 140) {
+  if (value && value.length > 140) {
     return message;
   }
 
@@ -93,7 +96,10 @@ function publishPlate() {
           placeholder="My tasty plate"
           class="block w-full px-4 py-2 border-2 rounded focus:outline-none focus:ring focus:ring-emerald-500"
         />
-        <ErrorMessage name="plate.title" />
+        <ErrorMessage
+          class="block p-2 mt-2 text-white bg-red-600 rounded"
+          name="plate.title"
+        />
       </div>
 
       <div class="mb-8">
@@ -107,7 +113,10 @@ function publishPlate() {
           placeholder="Lazar Nikolov"
           class="block w-full px-4 py-2 border-2 rounded focus:outline-none focus:ring focus:ring-emerald-500"
         />
-        <ErrorMessage name="plate.author.name" />
+        <ErrorMessage
+          class="block p-2 mt-2 text-white bg-red-600 rounded"
+          name="plate.author.name"
+        />
       </div>
 
       <div class="mb-8">
@@ -123,7 +132,10 @@ function publishPlate() {
           rules="url:Please include https:// in your website URL"
           class="block w-full px-4 py-2 border-2 rounded focus:outline-none focus:ring focus:ring-emerald-500"
         />
-        <ErrorMessage name="plate.author.socialLinks.website" />
+        <ErrorMessage
+          class="block p-2 mt-2 text-white bg-red-600 rounded"
+          name="plate.author.socialLinks.website"
+        />
       </div>
 
       <ol v-if="items.length > 0">
@@ -151,19 +163,33 @@ function publishPlate() {
       <div v-if="item_in_progress?.type === 'url'" class="mb-4">
         <h3 class="font-bold">Add a URL</h3>
         <label for="url" class="block">URL (include https://)</label>
-        <input
+        <Field
           id="url"
+          v-model="item_in_progress.url"
+          name="item_in_progress.url"
           type="text"
           class="block w-full px-4 py-2 border-2 rounded focus:outline-none focus:ring focus:ring-emerald-500"
           rules="url:Please include https:// in your website URL"
         />
+        <ErrorMessage
+          class="block p-2 mt-2 text-white bg-red-600 rounded"
+          name="item_in_progress.url"
+        />
+
         <label for="url_description" class="block">Description</label>
-        <textarea
+        <Field
           id="url_description"
+          v-model="item_in_progress.description"
+          name="item_in_progress.description"
           type="text"
           class="block w-full px-4 py-2 border-2 rounded focus:outline-none focus:ring focus:ring-emerald-500"
           rules="oneForty:Please enter fewer than 140 characters"
-        ></textarea>
+        />
+        <ErrorMessage
+          class="block p-2 mt-2 text-white bg-red-600 rounded"
+          name="item_in_progress.description"
+        />
+
         <button
           class="px-4 py-2 mt-4 font-bold text-white bg-pink-500 rounded-full bg- hover:bg-pink-700 focus:ring focus:ring-emerald-500"
           @click="addItem(ItemType.URL)"
