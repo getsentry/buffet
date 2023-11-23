@@ -73,7 +73,10 @@ function initItem() {
   };
 }
 
-function addItem(type: ItemType) {}
+function addItem() {
+  items.value.push(item_in_progress.value as Item);
+  item_in_progress.value = undefined;
+}
 
 function publishPlate() {
   alert("publishing plate, nothing else happens right now");
@@ -138,9 +141,15 @@ function publishPlate() {
         />
       </div>
 
-      <ol v-if="items.length > 0">
-        <li v-for="item in items" :key="item.id">{{ item.url }}</li>
-      </ol>
+      <div v-if="items.length > 0" class="m-auto border w-96">
+        <h2>Current items on plate</h2>
+        <ol class="list-decimal">
+          <li v-for="item in items" :key="item.id">
+            <p>{{ item.description }}</p>
+            <pre>{{ item.url }}</pre>
+          </li>
+        </ol>
+      </div>
 
       <div v-if="item_in_progress !== undefined" class="mb-8 border">
         <!-- bind this select value to item_in_progress.type -->
@@ -192,7 +201,7 @@ function publishPlate() {
 
         <button
           class="px-4 py-2 mt-4 font-bold text-white bg-pink-500 rounded-full bg- hover:bg-pink-700 focus:ring focus:ring-emerald-500"
-          @click="addItem(ItemType.URL)"
+          @click="addItem()"
         >
           Submit
         </button>
