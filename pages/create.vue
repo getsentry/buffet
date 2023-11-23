@@ -2,7 +2,7 @@
 // https://vueuse.org/core/useStorage/#usage
 import { Field, Form, ErrorMessage, defineRule } from "vee-validate";
 import { useStorage } from "@vueuse/core";
-import type { Plate } from "../utils/types";
+import { type Plate, ItemType } from "../utils/types";
 
 defineRule("required", (value: any, [message]: string) => {
   if (!value || value.length === 0) {
@@ -20,42 +20,66 @@ defineRule("url", (value: any, [message]: string) => {
   return "";
 });
 
-const STORAGE_KEY = "plate_in_progress";
+defineRule("oneForty", (value: any, [message]: string) => {
+  if (value && value.length > 0 && value.length <= 140) {
+    return message;
+  }
+
+  return "";
+});
+
+const STORAGE_KEYS = {
+  PLATE: "plate",
+  ITEMS: "items",
+  ITEM_IN_PROGRESS: "item_in_progress",
+};
+
+const plate = useStorage(STORAGE_KEYS.PLATE, initNewPlate());
+const items = useStorage<Item[]>(STORAGE_KEYS.ITEMS, []);
+const item_in_progress = ref<Item | undefined>(undefined);
 
 function initNewPlate(): Plate {
   return {
-    id: "1234",
+    id: 1234, // todo, remove this
     user_id: null,
+    fingerprint: "",
     title: "",
     description: "",
     author: {
       name: "",
-      socialLinks: {
-        website: "",
-      },
+      website: "",
     },
   };
 }
 
-function publishPlate() {
-  alert("publishing plate, nothing else happens right now");
-
-  // use plate variable in state
-  // send it to supabase
+function initItem() {
+  item_in_progress.value = {
+    ...item_in_progress.value,
+    id: 4444,
+    user_id: null,
+    plate_id: plate.value.id,
+    url: "",
+    description: "",
+    type: ItemType.URL,
+    metaData: {
+      metaTitle: "",
+      metaDescription: "",
+      favicon: "",
+      openGraphImageUrl: "",
+    },
+  };
 }
 
-const plate = useStorage(STORAGE_KEY, initNewPlate()); // second parameter is default value
+function addItem(type: ItemType) {}
+
+function publishPlate() {
+  alert("publishing plate, nothing else happens right now");
+}
 </script>
 
 <template>
   <div>
     <h1 class="mb-8 font-black text-8xl">Create a plate</h1>
-
-    <p>ID: {{ plate.id }}</p>
-    <p>TITLE: {{ plate.title }}</p>
-    <p>DESCRIPTION: {{ plate.description }}</p>
-    <p>AUTHOR: {{ plate.author.name }}</p>
-    <p>SOCIALLINKS.WEBSITE: {{ plate.author.socialLinks.website }}</p>
 
     <Form>
       <div class="mb-8">
@@ -92,7 +116,7 @@ const plate = useStorage(STORAGE_KEY, initNewPlate()); // second parameter is de
         >
         <Field
           id="author_website"
-          v-model="plate.author.socialLinks.website"
+          v-model="plate.author.website"
           name="plate.author.socialLinks.website"
           type="text"
           placeholder="https://whitep4nth3r.com"
@@ -100,6 +124,61 @@ const plate = useStorage(STORAGE_KEY, initNewPlate()); // second parameter is de
           class="block w-full px-4 py-2 border-2 rounded focus:outline-none focus:ring focus:ring-emerald-500"
         />
         <ErrorMessage name="plate.author.socialLinks.website" />
+      </div>
+
+      <ol v-if="items.length > 0">
+        <li v-for="item in items" :key="item.id">{{ item.url }}</li>
+      </ol>
+
+      <div v-if="item_in_progress !== undefined" class="mb-8 border">
+        <!-- bind this select value to item_in_progress.type -->
+        <label for="item_type" class="block">Type</label>
+        <select
+          id="item_type"
+          v-model="item_in_progress.type"
+          @change="console.log(item_in_progress.type)"
+        >
+          <option
+            v-for="(value, index) in Object.values(ItemType)"
+            :key="index"
+            :value="value"
+          >
+            {{ value }}
+          </option>
+        </select>
+      </div>
+
+      <div v-if="item_in_progress?.type === 'url'" class="mb-4">
+        <h3 class="font-bold">Add a URL</h3>
+        <label for="url" class="block">URL (include https://)</label>
+        <input
+          id="url"
+          type="text"
+          class="block w-full px-4 py-2 border-2 rounded focus:outline-none focus:ring focus:ring-emerald-500"
+          rules="url:Please include https:// in your website URL"
+        />
+        <label for="url_description" class="block">Description</label>
+        <textarea
+          id="url_description"
+          type="text"
+          class="block w-full px-4 py-2 border-2 rounded focus:outline-none focus:ring focus:ring-emerald-500"
+          rules="oneForty:Please enter fewer than 140 characters"
+        ></textarea>
+        <button
+          class="px-4 py-2 mt-4 font-bold text-white bg-pink-500 rounded-full bg- hover:bg-pink-700 focus:ring focus:ring-emerald-500"
+          @click="addItem(ItemType.URL)"
+        >
+          Submit
+        </button>
+      </div>
+
+      <div v-if="item_in_progress === undefined" class="mb-8">
+        <button
+          class="px-4 py-2 font-bold text-white bg-pink-500 rounded-full bg- hover:bg-pink-700 focus:ring focus:ring-emerald-500"
+          @click="initItem()"
+        >
+          Add item
+        </button>
       </div>
 
       <button
