@@ -34,7 +34,6 @@ defineRule("oneForty", (value: any, [message]: string) => {
 const STORAGE_KEYS = {
   PLATE: "plate",
   ITEMS: "items",
-  ITEM_IN_PROGRESS: "item_in_progress",
 };
 
 const plate = useStorage(STORAGE_KEYS.PLATE, initNewPlate());
