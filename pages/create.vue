@@ -42,7 +42,7 @@ const item_in_progress = ref<Item | undefined>(undefined);
 
 function initNewPlate(): Plate {
   return {
-    id: 1234, // todo, remove this
+    id: 1234, // todo, remove this when we add to DB as this will be auto generated
     user_id: null,
     fingerprint: "",
     title: "",
@@ -56,7 +56,6 @@ function initNewPlate(): Plate {
 
 function initItem() {
   item_in_progress.value = {
-    ...item_in_progress.value,
     id: 4444,
     user_id: null,
     plate_id: plate.value.id,
@@ -151,13 +150,8 @@ function publishPlate() {
       </div>
 
       <div v-if="item_in_progress !== undefined" class="mb-8 border">
-        <!-- bind this select value to item_in_progress.type -->
         <label for="item_type" class="block">Type</label>
-        <select
-          id="item_type"
-          v-model="item_in_progress.type"
-          @change="console.log(item_in_progress.type)"
-        >
+        <select id="item_type" v-model="item_in_progress.type">
           <option
             v-for="(value, index) in Object.values(ItemType)"
             :key="index"
