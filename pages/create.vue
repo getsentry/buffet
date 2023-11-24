@@ -2,7 +2,7 @@
 // https://vueuse.org/core/useStorage/#usage
 import { Field, Form, ErrorMessage, defineRule } from "vee-validate";
 import { useStorage } from "@vueuse/core";
-import { type Plate, ItemType } from "../utils/types";
+import { type Plate, type UrlMetaData, ItemType } from "../utils/types";
 
 // TODO - investigate console errors on blur of input fields,
 // probably caused by these rules
@@ -75,16 +75,32 @@ function initItem() {
     description: "",
     type: ItemType.URL,
     metaData: {
-      metaTitle: "",
-      metaDescription: "",
+      title: "",
+      description: "",
       favicon: "",
       openGraphImageUrl: "",
     },
   };
 }
 
-function addItem() {
+async function addItem() {
   console.log("adding item");
+
+  console.log("URL IS ", item_in_progress?.value?.url);
+
+  switch (item_in_progress?.value?.type) {
+    case ItemType.URL: {
+      const { data: metaData } = await useFetch(
+        `/api/metadata?url=${item_in_progress?.value?.url}`
+      );
+
+      item_in_progress.value.metaData = metaData.value as UrlMetaData;
+
+      break;
+    }
+    default:
+      break;
+  }
 
   items.value.push(item_in_progress.value as Item);
   item_in_progress.value = undefined;
@@ -167,6 +183,13 @@ function publishPlate() {
           <li v-for="item in items" :key="item.id">
             <p>{{ item.description }}</p>
             <pre>{{ item.url }}</pre>
+            <pre>{{ item.metaData.title }}</pre>
+            <pre>{{ item.metaData.description }}</pre>
+            <img :src="item.metaData.favicon as string" alt="favicon" />
+            <img
+              :src="item.metaData.openGraphImageUrl as string"
+              :alt="item.metaData.title as string"
+            />
           </li>
         </ol>
       </div>

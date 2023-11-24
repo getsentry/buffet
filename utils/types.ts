@@ -40,6 +40,13 @@ export type Plate = {
   author: AuthorProfile;
 };
 
+export type UrlMetaData = {
+  title: string | null;
+  description: string | null;
+  favicon: string | null;
+  openGraphImageUrl: string | null;
+};
+
 export type Item = {
   id: number;
   user_id: string | null; // null in v1
@@ -48,12 +55,6 @@ export type Item = {
   plate_id: number;
   url: string;
   type: ItemType; // default ItemType.URL
-  metaData: {
-    // mainly for URL types
-    metaTitle: string | null;
-    metaDescription: string | null;
-    favicon: string | null;
-    openGraphImageUrl: string | null;
-  };
+  metaData: UrlMetaData;
   description: string; // limit to 140 chars
 };
