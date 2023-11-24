@@ -7,6 +7,7 @@ import { type Plate, ItemType } from "../utils/types";
 // TODO - investigate console errors on blur of input fields,
 // probably caused by these rules
 // inputTypes.contains is not a function
+
 defineRule("required", (value: any, [message]: string) => {
   if (!value || value.length === 0) {
     return message;
@@ -16,8 +17,19 @@ defineRule("required", (value: any, [message]: string) => {
 });
 
 defineRule("url", (value: any, [message]: string) => {
-  if (value && value.length > 0 && !value.startsWith("https://")) {
-    return message;
+  if (value && value.length > 0) {
+    try {
+      const url = new URL(value);
+
+      if (!url.protocol.startsWith("https:")) {
+        return message;
+      }
+
+      return "";
+    } catch (e) {
+      console.log(e);
+      return message;
+    }
   }
 
   return "";
@@ -72,6 +84,8 @@ function initItem() {
 }
 
 function addItem() {
+  console.log("adding item");
+
   items.value.push(item_in_progress.value as Item);
   item_in_progress.value = undefined;
 }
@@ -85,8 +99,16 @@ function publishPlate() {
   <div>
     <h1 class="mb-8 font-black text-8xl">Create a plate</h1>
 
-    <Form>
+    <Form @submit="publishPlate">
       <div class="mb-8">
+        <div class="text-right">
+          <button
+            class="px-4 py-2 font-mono font-bold text-white border-b-4 rounded border-emerald-700 bg-emerald-500 hover:bg-emerald-400 hover:border-emerald-500 focus:ring focus:ring-emerald-500"
+            type="submit"
+          >
+            Publish plate
+          </button>
+        </div>
         <label for="title" class="block">Title</label>
         <Field
           id="title"
@@ -130,7 +152,7 @@ function publishPlate() {
           name="plate.author.socialLinks.website"
           type="text"
           placeholder="https://whitep4nth3r.com"
-          rules="url:Please include https:// in your website URL"
+          rules="url:Please enter a valid URL including https://"
           class="block w-full px-4 py-2 border-2 rounded focus:outline-none focus:ring focus:ring-emerald-500"
         />
         <ErrorMessage
@@ -149,6 +171,17 @@ function publishPlate() {
         </ol>
       </div>
 
+      <div v-if="item_in_progress === undefined" class="mb-8">
+        <button
+          class="px-4 py-2 font-bold text-white bg-pink-500 rounded-full bg- hover:bg-pink-700 focus:ring focus:ring-emerald-500"
+          @click="initItem()"
+        >
+          Add item
+        </button>
+      </div>
+    </Form>
+
+    <Form @submit="addItem">
       <div v-if="item_in_progress !== undefined" class="mb-8 border">
         <label for="item_type" class="block">Type</label>
         <select id="item_type" v-model="item_in_progress.type">
@@ -171,7 +204,7 @@ function publishPlate() {
           name="item_in_progress.url"
           type="text"
           class="block w-full px-4 py-2 border-2 rounded focus:outline-none focus:ring focus:ring-emerald-500"
-          rules="url:Please include https:// in your website URL"
+          rules="url:Please enter a valid URL including https://|required:Please enter a valid URL including https://"
         />
         <ErrorMessage
           class="block p-2 mt-2 text-white bg-red-600 rounded"
@@ -194,27 +227,11 @@ function publishPlate() {
 
         <button
           class="px-4 py-2 mt-4 font-bold text-white bg-pink-500 rounded-full bg- hover:bg-pink-700 focus:ring focus:ring-emerald-500"
-          @click="addItem()"
+          type="submit"
         >
-          Submit
+          Add to plate
         </button>
       </div>
-
-      <div v-if="item_in_progress === undefined" class="mb-8">
-        <button
-          class="px-4 py-2 font-bold text-white bg-pink-500 rounded-full bg- hover:bg-pink-700 focus:ring focus:ring-emerald-500"
-          @click="initItem()"
-        >
-          Add item
-        </button>
-      </div>
-
-      <button
-        class="px-4 py-2 font-mono font-bold text-white border-b-4 rounded border-emerald-700 bg-emerald-500 hover:bg-emerald-400 hover:border-emerald-500 focus:ring focus:ring-emerald-500"
-        type="submit"
-      >
-        Publish plate
-      </button>
     </Form>
   </div>
 </template>
