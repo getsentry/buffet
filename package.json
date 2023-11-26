@@ -37,6 +37,7 @@
   "dependencies": {
     "@ark-ui/vue": "^0.8.0",
     "@supabase/supabase-js": "^2.38.4",
-    "@vee-validate/nuxt": "^4.11.8"
+    "@vee-validate/nuxt": "^4.11.8",
+    "jsdom": "^23.0.0"
   }
 }
