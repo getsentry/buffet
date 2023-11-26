@@ -4,7 +4,7 @@ export enum ItemType {
   MASTODON = "mastodon",
   REDDIT = "reddit",
   TWITTER = "twitter",
-  THREAD = "thread",
+  THREADS = "threads",
   TIKTOK = "tiktok",
   GITHUB = "github",
   URL = "url",
@@ -27,8 +27,9 @@ export type AuthorProfile = {
   threads?: string;
 };
 
+// TODO: split creation and display types
 export type Plate = {
-  id: string;
+  id: number;
   user_id: string | null; // null in v1
   date_created?: string;
   last_updated?: string;
@@ -36,23 +37,24 @@ export type Plate = {
   fingerprint: string; // hash or custom string (future)
   title: string;
   description: string;
-  author?: AuthorProfile;
+  author: AuthorProfile;
+};
+
+export type UrlMetaData = {
+  title: string | null;
+  description: string | null;
+  favicon: string | null;
+  openGraphImageUrl: string | null;
 };
 
 export type Item = {
   id: number;
   user_id: string | null; // null in v1
-  date_created: string;
-  last_updated: string;
-  plate: Plate;
+  date_created?: string;
+  last_updated?: string;
+  plate_id: number;
   url: string;
   type: ItemType; // default ItemType.URL
-  metaData: {
-    // mainly for URL types
-    metaTitle: string | null;
-    metaDescription: string | null;
-    favicon: string | null;
-    openGraphImageUrl: string | null;
-  };
-  description: string | null; // limit to 140 chars
+  metaData: UrlMetaData;
+  description: string; // limit to 140 chars
 };
