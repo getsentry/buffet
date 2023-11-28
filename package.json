@@ -7,6 +7,7 @@
     "dev": "concurrently \"npm:dev:*\"",
     "dev:nuxt": "nuxi dev",
     "dev:supabase": "supabase start",
+    "supabase:typegen": "supabase gen types typescript --local > supabase/types.gen.ts",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
@@ -37,6 +38,8 @@
   "dependencies": {
     "@ark-ui/vue": "^0.8.0",
     "@supabase/supabase-js": "^2.38.4",
-    "@vee-validate/nuxt": "^4.11.8"
+    "@vee-validate/nuxt": "^4.11.8",
+    "h3-zod": "^0.5.2",
+    "zod": "^3.22.4"
   }
 }
