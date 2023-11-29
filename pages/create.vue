@@ -1,47 +1,40 @@
 <script setup lang="ts">
 // https://vueuse.org/core/useStorage/#usage
-import { Field, Form, ErrorMessage, defineRule } from "vee-validate";
+import { Field, Form, ErrorMessage } from "vee-validate";
+import { z } from "zod";
+import { toTypedSchema } from "@vee-validate/zod";
 import { useStorage } from "@vueuse/core";
 import { type Plate, type UrlMetaData, ItemType } from "../utils/types";
+
+const plateValidationSchema = toTypedSchema(
+  z.object({
+    title: z.string({
+      required_error: "Title is required!",
+    }),
+    author: z.string({
+      required_error: "Author is required!",
+    }),
+    author_website: z
+      .string()
+      .url({ message: "That doesn't look like a URL 🤨" })
+      .or(z.string().length(0)),
+  })
+);
+
+const itemValidationSchema = toTypedSchema(
+  z.object({
+    type: z.nativeEnum(ItemType),
+    url: z.string().url(),
+    description: z
+      .string()
+      .max(140, "Woah there. 140 max characters!")
+      .optional(),
+  })
+);
 
 // TODO - investigate console errors on blur of input fields,
 // probably caused by these rules
 // inputTypes.contains is not a function
-
-defineRule("required", (value: any, [message]: string) => {
-  if (!value || value.length === 0) {
-    return message;
-  }
-
-  return "";
-});
-
-defineRule("url", (value: any, [message]: string) => {
-  if (value && value.length > 0) {
-    try {
-      const url = new URL(value);
-
-      if (!url.protocol.startsWith("https:")) {
-        return message;
-      }
-
-      return "";
-    } catch (e) {
-      console.log(e);
-      return message;
-    }
-  }
-
-  return "";
-});
-
-defineRule("oneForty", (value: any, [message]: string) => {
-  if (value && value.length > 140) {
-    return message;
-  }
-
-  return "";
-});
 
 const STORAGE_KEYS = {
   PLATE: "plate",
@@ -115,7 +108,7 @@ function publishPlate() {
   <div>
     <h1 class="mb-8 font-black text-8xl">Create a plate</h1>
 
-    <Form @submit="publishPlate">
+    <Form :validation-schema="plateValidationSchema" @submit="publishPlate">
       <div class="mb-8">
         <div class="text-right">
           <button
@@ -129,7 +122,7 @@ function publishPlate() {
         <Field
           id="title"
           v-model="plate.title"
-          name="plate.title"
+          name="title"
           type="text"
           rules="required:Please enter a title"
           placeholder="My tasty plate"
@@ -137,7 +130,7 @@ function publishPlate() {
         />
         <ErrorMessage
           class="block p-2 mt-2 text-white bg-red-600 rounded"
-          name="plate.title"
+          name="title"
         />
       </div>
 
@@ -146,7 +139,7 @@ function publishPlate() {
         <Field
           id="author_name"
           v-model="plate.author.name"
-          name="plate.author.name"
+          name="author"
           type="text"
           rules="required:Please enter your name"
           placeholder="Lazar Nikolov"
@@ -154,7 +147,7 @@ function publishPlate() {
         />
         <ErrorMessage
           class="block p-2 mt-2 text-white bg-red-600 rounded"
-          name="plate.author.name"
+          name="author"
         />
       </div>
 
@@ -165,7 +158,7 @@ function publishPlate() {
         <Field
           id="author_website"
           v-model="plate.author.website"
-          name="plate.author.socialLinks.website"
+          name="author_website"
           type="text"
           placeholder="https://whitep4nth3r.com"
           rules="url:Please enter a valid URL including https://"
@@ -173,7 +166,7 @@ function publishPlate() {
         />
         <ErrorMessage
           class="block p-2 mt-2 text-white bg-red-600 rounded"
-          name="plate.author.socialLinks.website"
+          name="author_website"
         />
       </div>
 
@@ -204,10 +197,10 @@ function publishPlate() {
       </div>
     </Form>
 
-    <Form @submit="addItem">
+    <Form :validation-schema="itemValidationSchema" @submit="addItem">
       <div v-if="item_in_progress !== undefined" class="mb-8 border">
         <label for="item_type" class="block">Type</label>
-        <select id="item_type" v-model="item_in_progress.type">
+        <select id="item_type" v-model="item_in_progress.type" name="type">
           <option
             v-for="(value, index) in Object.values(ItemType)"
             :key="index"
@@ -224,28 +217,28 @@ function publishPlate() {
         <Field
           id="url"
           v-model="item_in_progress.url"
-          name="item_in_progress.url"
+          name="url"
           type="text"
           class="block w-full px-4 py-2 border-2 rounded focus:outline-none focus:ring focus:ring-emerald-500"
           rules="url:Please enter a valid URL including https://|required:Please enter a valid URL including https://"
         />
         <ErrorMessage
           class="block p-2 mt-2 text-white bg-red-600 rounded"
-          name="item_in_progress.url"
+          name="url"
         />
 
         <label for="url_description" class="block">Description</label>
         <Field
           id="url_description"
           v-model="item_in_progress.description"
-          name="item_in_progress.description"
+          name="description"
           type="text"
           class="block w-full px-4 py-2 border-2 rounded focus:outline-none focus:ring focus:ring-emerald-500"
           rules="oneForty:Please enter fewer than 140 characters"
         />
         <ErrorMessage
           class="block p-2 mt-2 text-white bg-red-600 rounded"
-          name="item_in_progress.description"
+          name="description"
         />
 
         <button

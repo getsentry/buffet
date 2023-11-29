@@ -2273,6 +2273,16 @@ packages:
       - vue
     dev: false
 
+  /@vee-validate/zod@4.12.2(vue@3.3.8):
+    resolution: {integrity: sha512-+g9lk8hO0FJCDGfjhuxUtFV44NVowu7cBvJiNr2x8DpWhBUXcfcE+XAJB0JjDQeT1O9lgO+mskZ+k8EdbAk0xw==}
+    dependencies:
+      type-fest: 4.8.2
+      vee-validate: 4.12.2(vue@3.3.8)
+      zod: 3.22.4
+    transitivePeerDependencies:
+      - vue
+    dev: false
+
   /@vercel/nft@0.24.3:
     resolution: {integrity: sha512-IyBdIxmFAeGZnEfMgt4QrGK7XX4lWazlQj34HEi9dw04/WeDBJ7r1yaOIO5tTf9pbfvwUFodj9b0H+NDGGoOMg==}
     engines: {node: '>=16'}
@@ -8298,6 +8308,16 @@ packages:
     resolution: {integrity: sha512-ZuVpw0axWYBM3aVTD/bm94hcWHumqeUgNjptOqfBT0gyqyHaGYCrm0tSD/0bygEbWUDwEPJOQaEKaUGM82j8TQ==}
     peerDependencies:
       vue: ^3.3.4
+    dependencies:
+      '@vue/devtools-api': 6.5.1
+      type-fest: 4.8.2
+      vue: 3.3.8(typescript@5.3.2)
+    dev: false
+
+  /vee-validate@4.12.2(vue@3.3.8):
+    resolution: {integrity: sha512-SF5AOHbyW8vy09FgMRVHxCtK/3D5Jsk0VyvMf/HZhwPgpjGCCBW6ZWDW11/HC6pRbMOjTcg3YueBI6hb3oveYg==}
+    peerDependencies:
+      vue: ^3.3.8
     dependencies:
       '@vue/devtools-api': 6.5.1
       type-fest: 4.8.2
