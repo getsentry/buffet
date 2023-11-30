@@ -219,7 +219,12 @@ function publishPlate() {
     <Form :validation-schema="itemValidationSchema" @submit="addItem">
       <div v-if="item_in_progress !== undefined" class="mb-8 border">
         <label for="item_type" class="block">Type</label>
-        <select id="item_type" v-model="item_in_progress.type" name="type">
+        <Field
+          id="item_type"
+          v-model="item_in_progress.type"
+          as="select"
+          name="type"
+        >
           <option
             v-for="(value, index) in Object.values(enumItemType)"
             :key="index"
@@ -227,7 +232,7 @@ function publishPlate() {
           >
             {{ value }}
           </option>
-        </select>
+        </Field>
         <ErrorMessage
           class="block p-2 mt-2 text-white bg-red-600 rounded"
           name="type"
