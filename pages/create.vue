@@ -4,7 +4,7 @@ import { Field, Form, ErrorMessage } from "vee-validate";
 import { z } from "zod";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useStorage } from "@vueuse/core";
-import { type Plate, type UrlMetaData, ItemType } from "../utils/types";
+import { type Plate, type UrlMetaData, enumItemType } from "../utils/types";
 
 const plateValidationSchema = toTypedSchema(
   z.object({
@@ -23,7 +23,12 @@ const plateValidationSchema = toTypedSchema(
 
 const itemValidationSchema = toTypedSchema(
   z.object({
-    type: z.nativeEnum(ItemType),
+    type: z.optional(
+      z.preprocess((val) => {
+        console.log(val);
+        return val as typeof enumItemType;
+      }, z.nativeEnum(enumItemType))
+    ), // leaving this as optional for now, but will need to be required, zod always reads the type field as undefined
     url: z.string().url(),
     description: z
       .string()
@@ -31,10 +36,6 @@ const itemValidationSchema = toTypedSchema(
       .optional(),
   })
 );
-
-// TODO - investigate console errors on blur of input fields,
-// probably caused by these rules
-// inputTypes.contains is not a function
 
 const STORAGE_KEYS = {
   PLATE: "plate",
@@ -66,7 +67,7 @@ function initItem() {
     plate_id: plate.value.id,
     url: "https://sentry.io",
     description: "",
-    type: ItemType.URL,
+    type: enumItemType.URL,
     metaData: {
       title: "",
       description: "",
@@ -79,10 +80,8 @@ function initItem() {
 async function addItem() {
   console.log("adding item");
 
-  console.log("URL IS ", item_in_progress?.value?.url);
-
   switch (item_in_progress?.value?.type) {
-    case ItemType.URL: {
+    case enumItemType.URL: {
       const { data: metaData } = await useFetch(
         `/api/metadata?url=${item_in_progress?.value?.url}`
       );
@@ -168,21 +167,43 @@ function publishPlate() {
         />
       </div>
 
-      <div v-if="items.length > 0" class="m-auto border w-96">
-        <h2>Current items on plate</h2>
-        <ol class="list-decimal">
-          <li v-for="item in items" :key="item.id">
-            <p>{{ item.description }}</p>
-            <pre>{{ item.url }}</pre>
-            <pre>{{ item.metaData.title }}</pre>
-            <pre>{{ item.metaData.description }}</pre>
-            <img :src="item.metaData.favicon as string" alt="favicon" />
-            <img
-              :src="item.metaData.openGraphImageUrl as string"
-              :alt="item.metaData.title as string"
-            />
+      <div v-if="items.length > 0" class="m-auto">
+        <ul
+          class="grid grid-cols-1 gap-4 mb-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+        >
+          <li
+            v-for="item in items"
+            :key="item.id"
+            class="overflow-hidden border rounded shadow-xl"
+          >
+            <!-- currently just for URL types at the moment, will need to do a switch based on type -->
+            <a :href="item.url" target="_blank">
+              <img
+                v-if="item.metaData.openGraphImageUrl !== null"
+                :src="item.metaData.openGraphImageUrl as string"
+                :alt="item.metaData.title as string"
+                class="object-cover w-full h-32 mb-2"
+              />
+              <div class="p-2 pb-4">
+                <h2 class="mb-2 text-sm font-bold">
+                  {{ item.metaData.title }}
+                </h2>
+                <p class="text-sm">{{ item.metaData.description }}</p>
+                <p
+                  v-if="item.description.length > 0"
+                  class="mt-4 text-sm italic"
+                >
+                  {{ item.description }}
+                </p>
+                <img
+                  v-if="item.metaData.favicon !== null"
+                  :src="item.metaData.favicon as string"
+                  alt="favicon"
+                />
+              </div>
+            </a>
           </li>
-        </ol>
+        </ul>
       </div>
 
       <div v-if="item_in_progress === undefined" class="mb-8">
@@ -200,13 +221,17 @@ function publishPlate() {
         <label for="item_type" class="block">Type</label>
         <select id="item_type" v-model="item_in_progress.type" name="type">
           <option
-            v-for="(value, index) in Object.values(ItemType)"
+            v-for="(value, index) in Object.values(enumItemType)"
             :key="index"
             :value="value"
           >
             {{ value }}
           </option>
         </select>
+        <ErrorMessage
+          class="block p-2 mt-2 text-white bg-red-600 rounded"
+          name="type"
+        />
       </div>
 
       <div v-if="item_in_progress?.type === 'url'" class="mb-4">

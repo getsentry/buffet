@@ -1,16 +1,18 @@
-export enum ItemType {
-  IMAGE = "image", // just link to resource URI
-  INSTAGRAM = "instagram",
-  MASTODON = "mastodon",
-  REDDIT = "reddit",
-  TWITTER = "twitter",
-  THREADS = "threads",
-  TIKTOK = "tiktok",
-  GITHUB = "github",
-  URL = "url",
-  YOUTUBE = "youtube",
-  PLATE = "plate", // can only be added to a tray
-}
+export const enumItemType = {
+  IMAGE: "image", // just link to resource URI
+  INSTAGRAM: "instagram",
+  MASTODON: "mastodon",
+  REDDIT: "reddit",
+  TWITTER: "twitter",
+  THREADS: "threads",
+  TIKTOK: "tiktok",
+  GITHUB: "github",
+  URL: "url",
+  YOUTUBE: "youtube",
+  PLATE: "plate", // can only be added to a tray
+} as const;
+
+export type ItemType = (typeof enumItemType)[keyof typeof enumItemType];
 
 export type AuthorProfile = {
   name: string;

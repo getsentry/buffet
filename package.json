@@ -38,6 +38,8 @@
     "@ark-ui/vue": "^0.8.0",
     "@supabase/supabase-js": "^2.38.4",
     "@vee-validate/nuxt": "^4.11.8",
-    "jsdom": "^23.0.0"
+    "@vee-validate/zod": "^4.12.2",
+    "url-metadata": "^3.3.0",
+    "zod": "^3.22.4"
   }
 }
