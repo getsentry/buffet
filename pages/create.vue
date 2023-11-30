@@ -64,7 +64,7 @@ function initItem() {
     id: 4444,
     user_id: null,
     plate_id: plate.value.id,
-    url: "",
+    url: "https://sentry.io",
     description: "",
     type: ItemType.URL,
     metaData: {
@@ -124,7 +124,6 @@ function publishPlate() {
           v-model="plate.title"
           name="title"
           type="text"
-          rules="required:Please enter a title"
           placeholder="My tasty plate"
           class="block w-full px-4 py-2 border-2 rounded focus:outline-none focus:ring focus:ring-emerald-500"
         />
@@ -141,7 +140,6 @@ function publishPlate() {
           v-model="plate.author.name"
           name="author"
           type="text"
-          rules="required:Please enter your name"
           placeholder="Lazar Nikolov"
           class="block w-full px-4 py-2 border-2 rounded focus:outline-none focus:ring focus:ring-emerald-500"
         />
@@ -220,7 +218,6 @@ function publishPlate() {
           name="url"
           type="text"
           class="block w-full px-4 py-2 border-2 rounded focus:outline-none focus:ring focus:ring-emerald-500"
-          rules="url:Please enter a valid URL including https://|required:Please enter a valid URL including https://"
         />
         <ErrorMessage
           class="block p-2 mt-2 text-white bg-red-600 rounded"
@@ -234,7 +231,6 @@ function publishPlate() {
           name="description"
           type="text"
           class="block w-full px-4 py-2 border-2 rounded focus:outline-none focus:ring focus:ring-emerald-500"
-          rules="oneForty:Please enter fewer than 140 characters"
         />
         <ErrorMessage
           class="block p-2 mt-2 text-white bg-red-600 rounded"
