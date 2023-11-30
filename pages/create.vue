@@ -65,7 +65,7 @@ function initItem() {
     id: 4444,
     user_id: null,
     plate_id: plate.value.id,
-    url: "https://sentry.io",
+    url: "",
     description: "",
     type: enumItemType.URL,
     metaData: {
