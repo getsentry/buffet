@@ -8,12 +8,8 @@ import { type Plate, type UrlMetaData, enumItemType } from "../utils/types";
 
 const plateValidationSchema = toTypedSchema(
   z.object({
-    title: z.string({
-      required_error: "Title is required!",
-    }),
-    author: z.string({
-      required_error: "Author is required!",
-    }),
+    title: z.string().min(1, "Title is required!"),
+    author: z.string().min(1, "Author is required!"),
     author_website: z
       .string()
       .url({ message: "That doesn't look like a URL 🤨" })
@@ -107,13 +103,39 @@ function publishPlate() {
   <div>
     <h1 class="mb-8 font-black text-8xl">Create a plate</h1>
 
-    <Form :validation-schema="plateValidationSchema" @submit="publishPlate">
+    <Form
+      v-slot="{ isSubmitting, isValidating }"
+      :validation-schema="plateValidationSchema"
+      @submit="publishPlate"
+    >
       <div class="mb-8">
-        <div class="text-right">
+        <div class="flex flex-col items-end">
           <button
-            class="px-4 py-2 font-mono font-bold text-white border-b-4 rounded border-emerald-700 bg-emerald-500 hover:bg-emerald-400 hover:border-emerald-500 focus:ring focus:ring-emerald-500"
+            class="flex items-center px-4 py-2 font-mono font-bold text-white border-b-4 rounded border-emerald-700 bg-emerald-500 disabled:border-slate-700 disabled:bg-slate-500 disabled:cursor-not-allowed hover:bg-emerald-400 hover:border-emerald-500 focus:ring focus:ring-emerald-500"
             type="submit"
+            :disabled="isSubmitting || isValidating"
           >
+            <svg
+              v-if="isSubmitting || isValidating"
+              class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
             Publish plate
           </button>
         </div>
@@ -133,9 +155,9 @@ function publishPlate() {
       </div>
 
       <div class="mb-8">
-        <label for="author_name" class="block">Author</label>
+        <label for="author" class="block">Author</label>
         <Field
-          id="author_name"
+          id="author"
           v-model="plate.author.name"
           name="author"
           type="text"
