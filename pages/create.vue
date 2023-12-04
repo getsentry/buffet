@@ -4,16 +4,12 @@ import { Field, Form, ErrorMessage } from "vee-validate";
 import { z } from "zod";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useStorage } from "@vueuse/core";
-import { type Plate, type UrlMetaData, ItemType } from "../utils/types";
+import { type Plate, type UrlMetaData, enumItemType } from "../utils/types";
 
 const plateValidationSchema = toTypedSchema(
   z.object({
-    title: z.string({
-      required_error: "Title is required!",
-    }),
-    author: z.string({
-      required_error: "Author is required!",
-    }),
+    title: z.string().min(1, "Title is required!"),
+    author: z.string().min(1, "Author is required!"),
     author_website: z
       .string()
       .url({ message: "That doesn't look like a URL 🤨" })
@@ -23,7 +19,12 @@ const plateValidationSchema = toTypedSchema(
 
 const itemValidationSchema = toTypedSchema(
   z.object({
-    type: z.nativeEnum(ItemType),
+    type: z.optional(
+      z.preprocess((val) => {
+        console.log(val);
+        return val as typeof enumItemType;
+      }, z.nativeEnum(enumItemType))
+    ), // leaving this as optional for now, but will need to be required, zod always reads the type field as undefined
     url: z.string().url(),
     description: z
       .string()
@@ -31,10 +32,6 @@ const itemValidationSchema = toTypedSchema(
       .optional(),
   })
 );
-
-// TODO - investigate console errors on blur of input fields,
-// probably caused by these rules
-// inputTypes.contains is not a function
 
 const STORAGE_KEYS = {
   PLATE: "plate",
@@ -66,7 +63,7 @@ function initItem() {
     plate_id: plate.value.id,
     url: "",
     description: "",
-    type: ItemType.URL,
+    type: enumItemType.URL,
     metaData: {
       title: "",
       description: "",
@@ -79,10 +76,8 @@ function initItem() {
 async function addItem() {
   console.log("adding item");
 
-  console.log("URL IS ", item_in_progress?.value?.url);
-
   switch (item_in_progress?.value?.type) {
-    case ItemType.URL: {
+    case enumItemType.URL: {
       const { data: metaData } = await useFetch(
         `/api/metadata?url=${item_in_progress?.value?.url}`
       );
@@ -108,13 +103,39 @@ function publishPlate() {
   <div>
     <h1 class="mb-8 font-black text-8xl">Create a plate</h1>
 
-    <Form :validation-schema="plateValidationSchema" @submit="publishPlate">
+    <Form
+      v-slot="{ isSubmitting, isValidating }"
+      :validation-schema="plateValidationSchema"
+      @submit="publishPlate"
+    >
       <div class="mb-8">
-        <div class="text-right">
+        <div class="flex flex-col items-end">
           <button
-            class="px-4 py-2 font-mono font-bold text-white border-b-4 rounded border-emerald-700 bg-emerald-500 hover:bg-emerald-400 hover:border-emerald-500 focus:ring focus:ring-emerald-500"
+            class="flex items-center px-4 py-2 font-mono font-bold text-white border-b-4 rounded border-emerald-700 bg-emerald-500 disabled:border-slate-700 disabled:bg-slate-500 disabled:cursor-not-allowed hover:bg-emerald-400 hover:border-emerald-500 focus:ring focus:ring-emerald-500"
             type="submit"
+            :disabled="isSubmitting || isValidating"
           >
+            <svg
+              v-if="isSubmitting || isValidating"
+              class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
             Publish plate
           </button>
         </div>
@@ -124,7 +145,6 @@ function publishPlate() {
           v-model="plate.title"
           name="title"
           type="text"
-          rules="required:Please enter a title"
           placeholder="My tasty plate"
           class="block w-full px-4 py-2 border-2 rounded focus:outline-none focus:ring focus:ring-emerald-500"
         />
@@ -135,13 +155,12 @@ function publishPlate() {
       </div>
 
       <div class="mb-8">
-        <label for="author_name" class="block">Author</label>
+        <label for="author" class="block">Author</label>
         <Field
-          id="author_name"
+          id="author"
           v-model="plate.author.name"
           name="author"
           type="text"
-          rules="required:Please enter your name"
           placeholder="Lazar Nikolov"
           class="block w-full px-4 py-2 border-2 rounded focus:outline-none focus:ring focus:ring-emerald-500"
         />
@@ -170,21 +189,43 @@ function publishPlate() {
         />
       </div>
 
-      <div v-if="items.length > 0" class="m-auto border w-96">
-        <h2>Current items on plate</h2>
-        <ol class="list-decimal">
-          <li v-for="item in items" :key="item.id">
-            <p>{{ item.description }}</p>
-            <pre>{{ item.url }}</pre>
-            <pre>{{ item.metaData.title }}</pre>
-            <pre>{{ item.metaData.description }}</pre>
-            <img :src="item.metaData.favicon as string" alt="favicon" />
-            <img
-              :src="item.metaData.openGraphImageUrl as string"
-              :alt="item.metaData.title as string"
-            />
+      <div v-if="items.length > 0" class="m-auto">
+        <ul
+          class="grid grid-cols-1 gap-4 mb-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+        >
+          <li
+            v-for="item in items"
+            :key="item.id"
+            class="overflow-hidden border rounded shadow-xl"
+          >
+            <!-- currently just for URL types at the moment, will need to do a switch based on type -->
+            <a :href="item.url" target="_blank">
+              <img
+                v-if="item.metaData.openGraphImageUrl !== null"
+                :src="item.metaData.openGraphImageUrl as string"
+                :alt="item.metaData.title as string"
+                class="object-cover w-full h-32 mb-2"
+              />
+              <div class="p-2 pb-4">
+                <h2 class="mb-2 text-sm font-bold">
+                  {{ item.metaData.title }}
+                </h2>
+                <p class="text-sm">{{ item.metaData.description }}</p>
+                <p
+                  v-if="item.description.length > 0"
+                  class="mt-4 text-sm italic"
+                >
+                  {{ item.description }}
+                </p>
+                <img
+                  v-if="item.metaData.favicon !== null"
+                  :src="item.metaData.favicon as string"
+                  alt="favicon"
+                />
+              </div>
+            </a>
           </li>
-        </ol>
+        </ul>
       </div>
 
       <div v-if="item_in_progress === undefined" class="mb-8">
@@ -200,15 +241,24 @@ function publishPlate() {
     <Form :validation-schema="itemValidationSchema" @submit="addItem">
       <div v-if="item_in_progress !== undefined" class="mb-8 border">
         <label for="item_type" class="block">Type</label>
-        <select id="item_type" v-model="item_in_progress.type" name="type">
+        <Field
+          id="item_type"
+          v-model="item_in_progress.type"
+          as="select"
+          name="type"
+        >
           <option
-            v-for="(value, index) in Object.values(ItemType)"
+            v-for="(value, index) in Object.values(enumItemType)"
             :key="index"
             :value="value"
           >
             {{ value }}
           </option>
-        </select>
+        </Field>
+        <ErrorMessage
+          class="block p-2 mt-2 text-white bg-red-600 rounded"
+          name="type"
+        />
       </div>
 
       <div v-if="item_in_progress?.type === 'url'" class="mb-4">
@@ -220,7 +270,6 @@ function publishPlate() {
           name="url"
           type="text"
           class="block w-full px-4 py-2 border-2 rounded focus:outline-none focus:ring focus:ring-emerald-500"
-          rules="url:Please enter a valid URL including https://|required:Please enter a valid URL including https://"
         />
         <ErrorMessage
           class="block p-2 mt-2 text-white bg-red-600 rounded"
@@ -234,7 +283,6 @@ function publishPlate() {
           name="description"
           type="text"
           class="block w-full px-4 py-2 border-2 rounded focus:outline-none focus:ring focus:ring-emerald-500"
-          rules="oneForty:Please enter fewer than 140 characters"
         />
         <ErrorMessage
           class="block p-2 mt-2 text-white bg-red-600 rounded"
