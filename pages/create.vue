@@ -4,7 +4,13 @@ import { Field, Form, ErrorMessage } from "vee-validate";
 import { z } from "zod";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useStorage } from "@vueuse/core";
-import { type Plate, type UrlMetaData, enumItemType } from "../utils/types";
+import { v4 as uuidv4 } from "uuid";
+import {
+  type Plate,
+  type Item,
+  type UrlMetaData,
+  enumItemType,
+} from "../utils/types";
 
 const plateValidationSchema = toTypedSchema(
   z.object({
@@ -44,7 +50,8 @@ const item_in_progress = ref<Item | undefined>(undefined);
 
 function initNewPlate(): Plate {
   return {
-    id: 1234, // todo, remove this when we add to DB as this will be auto generated
+    id: null,
+    ui_id: uuidv4(),
     user_id: null,
     fingerprint: "",
     title: "",
@@ -59,8 +66,9 @@ function initNewPlate(): Plate {
 function initItem() {
   item_in_progress.value = {
     id: 4444,
+    ui_id: uuidv4(),
     user_id: null,
-    plate_id: plate.value.id,
+    plate_id: null,
     url: "",
     description: "",
     type: enumItemType.URL,
@@ -74,8 +82,6 @@ function initItem() {
 }
 
 async function addItem() {
-  console.log("adding item");
-
   switch (item_in_progress?.value?.type) {
     case enumItemType.URL: {
       const { data: metaData } = await useFetch(
@@ -94,8 +100,13 @@ async function addItem() {
   item_in_progress.value = undefined;
 }
 
-function publishPlate() {
-  alert("publishing plate, nothing else happens right now");
+async function publishPlate() {
+  const result = await useFetch("/api/create", {
+    method: "POST",
+    body: JSON.stringify(plate.value),
+  });
+
+  // when successful, redirect to plate URL
 }
 </script>
 
@@ -117,7 +128,7 @@ function publishPlate() {
           >
             <svg
               v-if="isSubmitting || isValidating"
-              class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+              class="w-5 h-5 mr-3 -ml-1 text-white animate-spin"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
@@ -227,16 +238,16 @@ function publishPlate() {
           </li>
         </ul>
       </div>
-
-      <div v-if="item_in_progress === undefined" class="mb-8">
-        <button
-          class="px-4 py-2 font-bold text-white bg-pink-500 rounded-full bg- hover:bg-pink-700 focus:ring focus:ring-emerald-500"
-          @click="initItem()"
-        >
-          Add item
-        </button>
-      </div>
     </Form>
+
+    <div v-show="item_in_progress === undefined" class="mb-8">
+      <button
+        class="px-4 py-2 font-bold text-white bg-pink-500 rounded-full bg- hover:bg-pink-700 focus:ring focus:ring-emerald-500"
+        @click="initItem()"
+      >
+        Add item
+      </button>
+    </div>
 
     <Form :validation-schema="itemValidationSchema" @submit="addItem">
       <div v-if="item_in_progress !== undefined" class="mb-8 border">

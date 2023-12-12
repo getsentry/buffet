@@ -31,7 +31,8 @@ export type AuthorProfile = {
 
 // TODO: split creation and display types
 export type Plate = {
-  id: number;
+  id: number | null; // null for /create
+  ui_id: string;
   user_id: string | null; // null in v1
   date_created?: string;
   last_updated?: string;
@@ -51,10 +52,11 @@ export type UrlMetaData = {
 
 export type Item = {
   id: number;
+  ui_id: string;
   user_id: string | null; // null in v1
   date_created?: string;
   last_updated?: string;
-  plate_id: number;
+  plate_id: number | null;
   url: string;
   type: ItemType; // default ItemType.URL
   metaData: UrlMetaData;
