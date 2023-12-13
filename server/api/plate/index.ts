@@ -66,7 +66,6 @@ export default defineEventHandler(async (event: H3Event) => {
       .from("author_profiles")
       .insert(author)
       .select()
-      .limit(1)
       .single();
 
     if (authorError) {
@@ -81,7 +80,6 @@ export default defineEventHandler(async (event: H3Event) => {
         author_profile_id: dbAuthor.id,
       })
       .select()
-      .limit(1)
       .single();
 
     if (plateError) {
