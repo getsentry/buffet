@@ -1,16 +1,18 @@
-export enum ItemType {
-  IMAGE = "image", // just link to resource URI
-  INSTAGRAM = "instagram",
-  MASTODON = "mastodon",
-  REDDIT = "reddit",
-  TWITTER = "twitter",
-  THREADS = "threads",
-  TIKTOK = "tiktok",
-  GITHUB = "github",
-  URL = "url",
-  YOUTUBE = "youtube",
-  PLATE = "plate", // can only be added to a tray
-}
+export const enumItemType = {
+  IMAGE: "image", // just link to resource URI
+  INSTAGRAM: "instagram",
+  MASTODON: "mastodon",
+  REDDIT: "reddit",
+  TWITTER: "twitter",
+  THREADS: "threads",
+  TIKTOK: "tiktok",
+  GITHUB: "github",
+  URL: "url",
+  YOUTUBE: "youtube",
+  PLATE: "plate", // can only be added to a tray
+} as const;
+
+export type ItemType = (typeof enumItemType)[keyof typeof enumItemType];
 
 export type AuthorProfile = {
   name: string;
@@ -29,7 +31,8 @@ export type AuthorProfile = {
 
 // TODO: split creation and display types
 export type Plate = {
-  id: number;
+  id: number | null; // null for /create
+  ui_id: string;
   user_id: string | null; // null in v1
   date_created?: string;
   last_updated?: string;
@@ -50,10 +53,11 @@ export type UrlMetaData = {
 
 export type Item = {
   id: number;
+  ui_id: string;
   user_id: string | null; // null in v1
   date_created?: string;
   last_updated?: string;
-  plate_id: number;
+  plate_id: number | null;
   url: string;
   type: ItemType; // default ItemType.URL
   metaData: UrlMetaData;

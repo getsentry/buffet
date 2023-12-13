@@ -1,47 +1,43 @@
 <script setup lang="ts">
 // https://vueuse.org/core/useStorage/#usage
-import { Field, Form, ErrorMessage, defineRule } from "vee-validate";
+import { Field, Form, ErrorMessage } from "vee-validate";
+import { z } from "zod";
+import { toTypedSchema } from "@vee-validate/zod";
 import { useStorage } from "@vueuse/core";
-import { type Plate, type UrlMetaData, ItemType } from "../utils/types";
+import { v4 as uuidv4 } from "uuid";
+import {
+  type Plate,
+  type Item,
+  type UrlMetaData,
+  enumItemType,
+} from "../utils/types";
 
-// TODO - investigate console errors on blur of input fields,
-// probably caused by these rules
-// inputTypes.contains is not a function
+const plateValidationSchema = toTypedSchema(
+  z.object({
+    title: z.string().min(1, "Title is required!"),
+    author: z.string().min(1, "Author is required!"),
+    author_website: z
+      .string()
+      .url({ message: "That doesn't look like a URL 🤨" })
+      .or(z.string().length(0)),
+  })
+);
 
-defineRule("required", (value: any, [message]: string) => {
-  if (!value || value.length === 0) {
-    return message;
-  }
-
-  return "";
-});
-
-defineRule("url", (value: any, [message]: string) => {
-  if (value && value.length > 0) {
-    try {
-      const url = new URL(value);
-
-      if (!url.protocol.startsWith("https:")) {
-        return message;
-      }
-
-      return "";
-    } catch (e) {
-      console.log(e);
-      return message;
-    }
-  }
-
-  return "";
-});
-
-defineRule("oneForty", (value: any, [message]: string) => {
-  if (value && value.length > 140) {
-    return message;
-  }
-
-  return "";
-});
+const itemValidationSchema = toTypedSchema(
+  z.object({
+    type: z.optional(
+      z.preprocess((val) => {
+        console.log(val);
+        return val as typeof enumItemType;
+      }, z.nativeEnum(enumItemType))
+    ), // leaving this as optional for now, but will need to be required, zod always reads the type field as undefined
+    url: z.string().url(),
+    description: z
+      .string()
+      .max(140, "Woah there. 140 max characters!")
+      .optional(),
+  })
+);
 
 const STORAGE_KEYS = {
   PLATE: "plate",
@@ -54,7 +50,8 @@ const item_in_progress = ref<Item | undefined>(undefined);
 
 function initNewPlate(): Plate {
   return {
-    id: 1234, // todo, remove this when we add to DB as this will be auto generated
+    id: null,
+    ui_id: uuidv4(),
     user_id: null,
     fingerprint: "",
     title: "",
@@ -69,11 +66,12 @@ function initNewPlate(): Plate {
 function initItem() {
   item_in_progress.value = {
     id: 4444,
+    ui_id: uuidv4(),
     user_id: null,
-    plate_id: plate.value.id,
+    plate_id: null,
     url: "",
     description: "",
-    type: ItemType.URL,
+    type: enumItemType.URL,
     metaData: {
       title: "",
       description: "",
@@ -84,12 +82,8 @@ function initItem() {
 }
 
 async function addItem() {
-  console.log("adding item");
-
-  console.log("URL IS ", item_in_progress?.value?.url);
-
   switch (item_in_progress?.value?.type) {
-    case ItemType.URL: {
+    case enumItemType.URL: {
       const { data: metaData } = await useFetch(
         `/api/metadata?url=${item_in_progress?.value?.url}`
       );
@@ -106,8 +100,13 @@ async function addItem() {
   item_in_progress.value = undefined;
 }
 
-function publishPlate() {
-  alert("publishing plate, nothing else happens right now");
+async function publishPlate() {
+  const result = await useFetch("/api/create", {
+    method: "POST",
+    body: JSON.stringify(plate.value),
+  });
+
+  // when successful, redirect to plate URL
 }
 </script>
 
@@ -115,13 +114,39 @@ function publishPlate() {
   <div>
     <h1 class="mb-8 font-black text-8xl">Create a plate</h1>
 
-    <Form @submit="publishPlate">
+    <Form
+      v-slot="{ isSubmitting, isValidating }"
+      :validation-schema="plateValidationSchema"
+      @submit="publishPlate"
+    >
       <div class="mb-8">
-        <div class="text-right">
+        <div class="flex flex-col items-end">
           <button
-            class="px-4 py-2 font-mono font-bold text-white border-b-4 rounded border-emerald-700 bg-emerald-500 hover:bg-emerald-400 hover:border-emerald-500 focus:ring focus:ring-emerald-500"
+            class="flex items-center px-4 py-2 font-mono font-bold text-white border-b-4 rounded border-emerald-700 bg-emerald-500 disabled:border-slate-700 disabled:bg-slate-500 disabled:cursor-not-allowed hover:bg-emerald-400 hover:border-emerald-500 focus:ring focus:ring-emerald-500"
             type="submit"
+            :disabled="isSubmitting || isValidating"
           >
+            <svg
+              v-if="isSubmitting || isValidating"
+              class="w-5 h-5 mr-3 -ml-1 text-white animate-spin"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
             Publish plate
           </button>
         </div>
@@ -129,32 +154,30 @@ function publishPlate() {
         <Field
           id="title"
           v-model="plate.title"
-          name="plate.title"
+          name="title"
           type="text"
-          rules="required:Please enter a title"
           placeholder="My tasty plate"
           class="block w-full px-4 py-2 border-2 rounded focus:outline-none focus:ring focus:ring-emerald-500"
         />
         <ErrorMessage
           class="block p-2 mt-2 text-white bg-red-600 rounded"
-          name="plate.title"
+          name="title"
         />
       </div>
 
       <div class="mb-8">
-        <label for="author_name" class="block">Author</label>
+        <label for="author" class="block">Author</label>
         <Field
-          id="author_name"
+          id="author"
           v-model="plate.author.name"
-          name="plate.author.name"
+          name="author"
           type="text"
-          rules="required:Please enter your name"
           placeholder="Lazar Nikolov"
           class="block w-full px-4 py-2 border-2 rounded focus:outline-none focus:ring focus:ring-emerald-500"
         />
         <ErrorMessage
           class="block p-2 mt-2 text-white bg-red-600 rounded"
-          name="plate.author.name"
+          name="author"
         />
       </div>
 
@@ -165,7 +188,7 @@ function publishPlate() {
         <Field
           id="author_website"
           v-model="plate.author.website"
-          name="plate.author.socialLinks.website"
+          name="author_website"
           type="text"
           placeholder="https://whitep4nth3r.com"
           rules="url:Please enter a valid URL including https://"
@@ -173,49 +196,80 @@ function publishPlate() {
         />
         <ErrorMessage
           class="block p-2 mt-2 text-white bg-red-600 rounded"
-          name="plate.author.socialLinks.website"
+          name="author_website"
         />
       </div>
 
-      <div v-if="items.length > 0" class="m-auto border w-96">
-        <h2>Current items on plate</h2>
-        <ol class="list-decimal">
-          <li v-for="item in items" :key="item.id">
-            <p>{{ item.description }}</p>
-            <pre>{{ item.url }}</pre>
-            <pre>{{ item.metaData.title }}</pre>
-            <pre>{{ item.metaData.description }}</pre>
-            <img :src="item.metaData.favicon as string" alt="favicon" />
-            <img
-              :src="item.metaData.openGraphImageUrl as string"
-              :alt="item.metaData.title as string"
-            />
-          </li>
-        </ol>
-      </div>
-
-      <div v-if="item_in_progress === undefined" class="mb-8">
-        <button
-          class="px-4 py-2 font-bold text-white bg-pink-500 rounded-full bg- hover:bg-pink-700 focus:ring focus:ring-emerald-500"
-          @click="initItem()"
+      <div v-if="items.length > 0" class="m-auto">
+        <ul
+          class="grid grid-cols-1 gap-4 mb-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
         >
-          Add item
-        </button>
+          <li
+            v-for="item in items"
+            :key="item.id"
+            class="overflow-hidden border rounded shadow-xl"
+          >
+            <!-- currently just for URL types at the moment, will need to do a switch based on type -->
+            <a :href="item.url" target="_blank">
+              <img
+                v-if="item.metaData.openGraphImageUrl !== null"
+                :src="item.metaData.openGraphImageUrl as string"
+                :alt="item.metaData.title as string"
+                class="object-cover w-full h-32 mb-2"
+              />
+              <div class="p-2 pb-4">
+                <h2 class="mb-2 text-sm font-bold">
+                  {{ item.metaData.title }}
+                </h2>
+                <p class="text-sm">{{ item.metaData.description }}</p>
+                <p
+                  v-if="item.description.length > 0"
+                  class="mt-4 text-sm italic"
+                >
+                  {{ item.description }}
+                </p>
+                <img
+                  v-if="item.metaData.favicon !== null"
+                  :src="item.metaData.favicon as string"
+                  alt="favicon"
+                />
+              </div>
+            </a>
+          </li>
+        </ul>
       </div>
     </Form>
 
-    <Form @submit="addItem">
+    <div v-show="item_in_progress === undefined" class="mb-8">
+      <button
+        class="px-4 py-2 font-bold text-white bg-pink-500 rounded-full bg- hover:bg-pink-700 focus:ring focus:ring-emerald-500"
+        @click="initItem()"
+      >
+        Add item
+      </button>
+    </div>
+
+    <Form :validation-schema="itemValidationSchema" @submit="addItem">
       <div v-if="item_in_progress !== undefined" class="mb-8 border">
         <label for="item_type" class="block">Type</label>
-        <select id="item_type" v-model="item_in_progress.type">
+        <Field
+          id="item_type"
+          v-model="item_in_progress.type"
+          as="select"
+          name="type"
+        >
           <option
-            v-for="(value, index) in Object.values(ItemType)"
+            v-for="(value, index) in Object.values(enumItemType)"
             :key="index"
             :value="value"
           >
             {{ value }}
           </option>
-        </select>
+        </Field>
+        <ErrorMessage
+          class="block p-2 mt-2 text-white bg-red-600 rounded"
+          name="type"
+        />
       </div>
 
       <div v-if="item_in_progress?.type === 'url'" class="mb-4">
@@ -224,28 +278,26 @@ function publishPlate() {
         <Field
           id="url"
           v-model="item_in_progress.url"
-          name="item_in_progress.url"
+          name="url"
           type="text"
           class="block w-full px-4 py-2 border-2 rounded focus:outline-none focus:ring focus:ring-emerald-500"
-          rules="url:Please enter a valid URL including https://|required:Please enter a valid URL including https://"
         />
         <ErrorMessage
           class="block p-2 mt-2 text-white bg-red-600 rounded"
-          name="item_in_progress.url"
+          name="url"
         />
 
         <label for="url_description" class="block">Description</label>
         <Field
           id="url_description"
           v-model="item_in_progress.description"
-          name="item_in_progress.description"
+          name="description"
           type="text"
           class="block w-full px-4 py-2 border-2 rounded focus:outline-none focus:ring focus:ring-emerald-500"
-          rules="oneForty:Please enter fewer than 140 characters"
         />
         <ErrorMessage
           class="block p-2 mt-2 text-white bg-red-600 rounded"
-          name="item_in_progress.description"
+          name="description"
         />
 
         <button
