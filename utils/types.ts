@@ -29,21 +29,17 @@ export type AuthorProfile = {
   threads?: string;
 };
 
-// TODO: split creation and display types
 export type Plate = {
   id: number | null; // null for /create
   ui_id: string;
-  user_id: string | null; // null in v1
   date_created?: string;
   last_updated?: string;
   plate_ids?: string[]; // remixed plates
-  fingerprint: string; // hash or custom string (future)
   title: string;
   description: string;
-  author: AuthorProfile;
+  author_profile_id?: number;
 };
 
-// TODO: Should we keep the metadata in the db? If yes - how/when do we update it?
 export type UrlMetaData = {
   title: string | null;
   description: string | null;

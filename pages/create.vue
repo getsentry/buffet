@@ -10,11 +10,13 @@ import {
   type Item,
   type UrlMetaData,
   enumItemType,
+  type AuthorProfile,
 } from "../utils/types";
 
 const plateValidationSchema = toTypedSchema(
   z.object({
     title: z.string().min(1, "Title is required!"),
+    description: z.string().max(140, "Max 140 characters").optional(),
     author: z.string().min(1, "Author is required!"),
     author_website: z
       .string()
@@ -25,12 +27,9 @@ const plateValidationSchema = toTypedSchema(
 
 const itemValidationSchema = toTypedSchema(
   z.object({
-    type: z.optional(
-      z.preprocess((val) => {
-        console.log(val);
-        return val as typeof enumItemType;
-      }, z.nativeEnum(enumItemType))
-    ), // leaving this as optional for now, but will need to be required, zod always reads the type field as undefined
+    type: z.preprocess((val) => {
+      return val as typeof enumItemType;
+    }, z.nativeEnum(enumItemType)),
     url: z.string().url(),
     description: z
       .string()
@@ -41,10 +40,12 @@ const itemValidationSchema = toTypedSchema(
 
 const STORAGE_KEYS = {
   PLATE: "plate",
+  AUTHOR: "author",
   ITEMS: "items",
 };
 
 const plate = useStorage(STORAGE_KEYS.PLATE, initNewPlate());
+const author = useStorage(STORAGE_KEYS.AUTHOR, initNewAuthor());
 const items = useStorage<Item[]>(STORAGE_KEYS.ITEMS, []);
 const item_in_progress = ref<Item | undefined>(undefined);
 
@@ -52,14 +53,14 @@ function initNewPlate(): Plate {
   return {
     id: null,
     ui_id: uuidv4(),
-    user_id: null,
-    fingerprint: "",
     title: "",
     description: "",
-    author: {
-      name: "",
-      website: "",
-    },
+  };
+}
+function initNewAuthor(): AuthorProfile {
+  return {
+    name: "",
+    website: "",
   };
 }
 
@@ -101,12 +102,22 @@ async function addItem() {
 }
 
 async function publishPlate() {
-  const result = await useFetch("/api/create", {
+  const { data, status } = await useFetch("/api/plate", {
     method: "POST",
-    body: JSON.stringify(plate.value),
+    body: JSON.stringify({
+      plate: { title: plate.value.title, description: plate.value.description },
+      items: items.value.map((item) => ({
+        type: item.type,
+        url: item.url,
+        description: item.description,
+      })),
+      author: author.value,
+    }),
   });
 
-  // when successful, redirect to plate URL
+  if (status.value === "success") {
+    await navigateTo(`/plate/${data.value?.plate_id}/`);
+  }
 }
 </script>
 
@@ -150,26 +161,44 @@ async function publishPlate() {
             Publish plate
           </button>
         </div>
-        <label for="title" class="block">Title</label>
-        <Field
-          id="title"
-          v-model="plate.title"
-          name="title"
-          type="text"
-          placeholder="My tasty plate"
-          class="block w-full px-4 py-2 border-2 rounded focus:outline-none focus:ring focus:ring-emerald-500"
-        />
-        <ErrorMessage
-          class="block p-2 mt-2 text-white bg-red-600 rounded"
-          name="title"
-        />
+        <div class="mb-8">
+          <label for="title" class="block">Title</label>
+          <Field
+            id="title"
+            v-model="plate.title"
+            name="title"
+            type="text"
+            placeholder="My tasty plate"
+            class="block w-full px-4 py-2 border-2 rounded focus:outline-none focus:ring focus:ring-emerald-500"
+          />
+          <ErrorMessage
+            class="block p-2 mt-2 text-white bg-red-600 rounded"
+            name="title"
+          />
+        </div>
+
+        <div class="mb-8">
+          <label for="description" class="block">Description</label>
+          <Field
+            id="description"
+            v-model="plate.description"
+            name="description"
+            type="text"
+            placeholder="Something descriptive!"
+            class="block w-full px-4 py-2 border-2 rounded focus:outline-none focus:ring focus:ring-emerald-500"
+          />
+          <ErrorMessage
+            class="block p-2 mt-2 text-white bg-red-600 rounded"
+            name="description"
+          />
+        </div>
       </div>
 
       <div class="mb-8">
         <label for="author" class="block">Author</label>
         <Field
           id="author"
-          v-model="plate.author.name"
+          v-model="author.name"
           name="author"
           type="text"
           placeholder="Lazar Nikolov"
@@ -187,7 +216,7 @@ async function publishPlate() {
         >
         <Field
           id="author_website"
-          v-model="plate.author.website"
+          v-model="author.website"
           name="author_website"
           type="text"
           placeholder="https://whitep4nth3r.com"
