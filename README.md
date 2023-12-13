@@ -16,4 +16,4 @@ After cloning the repo, run the following commands:
 - `pnpm dev`: to start the Nuxt and Supabase servers locally
   - When the Supabase server starts locally it will print out the URL and the Anon Key. Grab them
     and set them in the `.env` file.
-- TBD...
+- Access the frontend at [localhost:3000](http://localhost:3000), and the local Supabase at [localhost:54323](http://localhost:54323)
