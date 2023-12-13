@@ -103,7 +103,6 @@ export interface Database {
           description: string | null
           id: number
           last_updated: string | null
-          meta_data: Json | null
           plate_id: number | null
           type: number
           url: string
@@ -113,7 +112,6 @@ export interface Database {
           description?: string | null
           id?: number
           last_updated?: string | null
-          meta_data?: Json | null
           plate_id?: number | null
           type?: number
           url: string
@@ -123,7 +121,6 @@ export interface Database {
           description?: string | null
           id?: number
           last_updated?: string | null
-          meta_data?: Json | null
           plate_id?: number | null
           type?: number
           url?: string
@@ -145,36 +142,33 @@ export interface Database {
       }
       plates: {
         Row: {
-          author_profile: number | null
+          author_profile_id: number
           date_created: string
           description: string | null
-          fingerprint: string
           id: number
           last_updated: string | null
-          title: string | null
+          title: string
         }
         Insert: {
-          author_profile?: number | null
+          author_profile_id: number
           date_created?: string
           description?: string | null
-          fingerprint: string
           id?: number
           last_updated?: string | null
-          title?: string | null
+          title?: string
         }
         Update: {
-          author_profile?: number | null
+          author_profile_id?: number
           date_created?: string
           description?: string | null
-          fingerprint?: string
           id?: number
           last_updated?: string | null
-          title?: string | null
+          title?: string
         }
         Relationships: [
           {
-            foreignKeyName: "plates_author_profile_fkey"
-            columns: ["author_profile"]
+            foreignKeyName: "plates_author_profile_id_fkey"
+            columns: ["author_profile_id"]
             referencedRelation: "author_profiles"
             referencedColumns: ["id"]
           }
