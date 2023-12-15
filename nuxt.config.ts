@@ -5,6 +5,14 @@ export default defineNuxtConfig({
     server: true,
     client: true,
   },
+  runtimeConfig: {
+    public: {
+      sentry: {
+        dsn: "", // will be overwritten by NUXT_PUBLIC_SENTRY_DSN variable
+        environment: "development", // will be overwritten by NUXT_PUBLIC_SENTRY_ENVIRONMENT
+      },
+    },
+  },
   routeRules: {
     "/": { prerender: true },
     "/create": { ssr: false },

@@ -18,7 +18,6 @@ export default defineEventHandler(async (event: H3Event) => {
       const fetchedMetadata = await urlMetadata(query.url as string, {
         mode: "cors",
       });
-      console.log("fetched metadata:", fetchedMetadata);
       return {
         title: fetchedMetadata.title,
         description: fetchedMetadata.description,
