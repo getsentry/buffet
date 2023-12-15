@@ -28,7 +28,7 @@ export default defineNuxtPlugin((nuxtApp) => {
     ],
 
     tracesSampleRate: environment === "development" ? 1.0 : 0.2,
-    tracePropagationTargets: ["localhost", /^https:\/\/buffet\.sentry\.dev/],
+    tracePropagationTargets: ["localhost", /^https:\/\/buffet.*\.sentry\.dev/],
 
     replaysSessionSampleRate: environment === "development" ? 1.0 : 0.2,
     replaysOnErrorSampleRate: 1.0,
