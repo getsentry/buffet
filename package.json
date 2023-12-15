@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "nuxt build",
-    "build:vercel": "pnpm build && sentry-cli sourcemaps inject .vercel/output && sentry-cli releases new $(sentry-cli releases propose-version) --finalize && sentry-cli sourcemaps upload .vercel/output --log-level debug --ignore .vercel/output/functions/__nitro.func/node_modules --release=$(sentry-cli releases propose-version)",
+    "build:vercel": "pnpm build && sentry-cli sourcemaps inject .vercel/output && sentry-cli releases new $(sentry-cli releases propose-version) --finalize && sentry-cli sourcemaps upload .vercel/output --log-level debug --ignore **/node_modules --release=$(sentry-cli releases propose-version)",
     "dev": "concurrently \"npm:dev:*\"",
     "dev:nuxt": "nuxi dev --inspect",
     "dev:supabase": "supabase start",
