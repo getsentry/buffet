@@ -1,5 +1,3 @@
-import { sentryVitePlugin } from "@sentry/vite-plugin";
-
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   devtools: { enabled: true },
@@ -37,14 +35,5 @@ export default defineNuxtConfig({
   },
   supabase: {
     redirect: false,
-  },
-  vite: {
-    plugins: [
-      sentryVitePlugin({
-        authToken: process.env.SENTRY_AUTH_TOKEN,
-        org: "sentry-devrel",
-        project: "buffet",
-      }),
-    ],
   },
 });
