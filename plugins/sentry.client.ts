@@ -33,4 +33,29 @@ export default defineNuxtPlugin((nuxtApp) => {
     replaysSessionSampleRate: environment === "development" ? 1.0 : 0.2,
     replaysOnErrorSampleRate: 1.0,
   });
+
+  nuxtApp.vueApp.mixin(
+    Sentry.createTracingMixins({
+      trackComponents: true,
+      timeout: 2000,
+      hooks: ["activate", "mount", "update"],
+    })
+  );
+  Sentry.attachErrorHandler(nuxtApp.vueApp, {
+    logErrors: false,
+    attachProps: true,
+    trackComponents: true,
+    timeout: 2000,
+    hooks: ["activate", "mount", "update"],
+  });
+
+  return {
+    provide: {
+      sentrySetContext: Sentry.setContext,
+      sentrySetUser: Sentry.setUser,
+      sentrySetTag: Sentry.setTag,
+      sentryAddBreadcrumb: Sentry.addBreadcrumb,
+      sentryCaptureException: Sentry.captureException,
+    },
+  };
 });

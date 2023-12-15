@@ -39,6 +39,9 @@ export default defineNuxtConfig({
     redirect: false,
   },
   vite: {
+    build: {
+      sourcemap: true,
+    },
     plugins: [
       sentryVitePlugin({
         authToken: process.env.SENTRY_AUTH_TOKEN,
