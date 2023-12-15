@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "nuxt build && sentry-cli sourcemaps inject .output && sentry-cli releases new $(sentry-cli releases propose-version) --finalize && sentry-cli sourcemaps upload .output --log-level debug --ignore node_modules --release=$(sentry-cli releases propose-version)",
+    "build": "nuxt build && sentry-cli sourcemaps inject .nuxt/dist && sentry-cli releases new $(sentry-cli releases propose-version) --finalize && sentry-cli sourcemaps upload .nuxt/dist --log-level debug --ignore node_modules --release=$(sentry-cli releases propose-version)",
     "dev": "concurrently \"npm:dev:*\"",
     "dev:nuxt": "nuxi dev --inspect",
     "dev:supabase": "supabase start",
