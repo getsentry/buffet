@@ -48,7 +48,6 @@ export type UrlMetaData = {
 };
 
 export type Item = {
-  id: number;
   ui_id: string;
   user_id: string | null; // null in v1
   date_created?: string;

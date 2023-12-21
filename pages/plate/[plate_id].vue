@@ -62,11 +62,6 @@ await Promise.all(
               >
                 {{ item.description }}
               </p>
-              <img
-                v-if="metaData[item.id].favicon !== null"
-                :src="metaData[item.id].favicon as string"
-                alt="favicon"
-              />
             </div>
           </a>
         </li>
