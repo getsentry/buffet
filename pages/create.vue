@@ -66,7 +66,6 @@ function initNewAuthor(): AuthorProfile {
 
 function initItem() {
   item_in_progress.value = {
-    id: 4444,
     ui_id: uuidv4(),
     user_id: null,
     plate_id: null,
@@ -99,6 +98,14 @@ async function addItem() {
 
   items.value.push(item_in_progress.value as Item);
   item_in_progress.value = undefined;
+}
+
+function removeItem(item_ui_id: string) {
+  const itemToRemoveIndex = items.value.findIndex(
+    (item) => item.ui_id === item_ui_id
+  );
+
+  items.value.splice(itemToRemoveIndex, 1);
 }
 
 async function publishPlate() {
@@ -235,7 +242,7 @@ async function publishPlate() {
         >
           <li
             v-for="item in items"
-            :key="item.id"
+            :key="item.ui_id"
             class="overflow-hidden border rounded shadow-xl"
           >
             <!-- currently just for URL types at the moment, will need to do a switch based on type -->
@@ -257,13 +264,15 @@ async function publishPlate() {
                 >
                   {{ item.description }}
                 </p>
-                <img
-                  v-if="item.metaData.favicon !== null"
-                  :src="item.metaData.favicon as string"
-                  alt="favicon"
-                />
               </div>
             </a>
+            <button
+              type="button"
+              class="flex items-center px-4 py-2 font-mono text-xs font-bold text-white bg-red-500 border-red-700 align-right disabled:border-slate-700 disabled:bg-slate-500 disabled:cursor-not-allowed hover:bg-red-400 hover:border-red-500 focus:ring focus:ring-red-500"
+              @click="removeItem(item.ui_id)"
+            >
+              X Delete!
+            </button>
           </li>
         </ul>
       </div>
@@ -271,7 +280,7 @@ async function publishPlate() {
 
     <div v-show="item_in_progress === undefined" class="mb-8">
       <button
-        class="px-4 py-2 font-bold text-white bg-pink-500 rounded-full bg- hover:bg-pink-700 focus:ring focus:ring-emerald-500"
+        class="px-4 py-2 font-bold text-white bg-pink-500 rounded-full hover:bg-pink-700 focus:ring focus:ring-emerald-500"
         @click="initItem()"
       >
         Add item
