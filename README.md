@@ -18,6 +18,13 @@ After cloning the repo, run the following commands:
     and set them in the `.env` file.
 - Access the frontend at [localhost:3000](http://localhost:3000), and the local Supabase at [localhost:54323](http://localhost:54323)
 
+## Database seeding
+
+- On a fresh install of Supabase, the database will be seeded with data from `seed.sql`.
+- To wipe the database manually and start a fresh local environment, run `npx supabase db reset`. This will also run the `seed.sql` file.
+- `npx supabase start` does not run the `seed.sql` file after the Docker volume has been created. (Contrary to what the docs currently say!)
+- [More documentation](https://supabase.com/docs/guides/cli/seeding-your-database)
+
 ## Routine commands
 
-- In case there's a migration that needs to be applied, run `pnpm migrate:local`.
+- To run Supabase database migrations, run `pnpm migrate:local`.
